@@ -9,6 +9,7 @@ on:
     branches: [dev]
     
 jobs:
+
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
@@ -23,3 +24,22 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "This job's status is ${{ job.status }}."
+
+  deploy:
+    name: Upload to Amazon S3
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Configure AWS credentials from sandbox account
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: arn:aws:iam::072737625154:role/oblcc/oblcc-admin
+        aws-region: us-east-1
+    - name: Copy files to the test website with the AWS CLI
+      run: |
+        aws s3api create-bucket --bucket mohan -github-actions-bucket-2023 --region us-east-1
